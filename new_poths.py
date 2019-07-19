@@ -18,6 +18,8 @@ cv2.createTrackbar("L-V", "Trackbar", 0 , 255, nothing)
 cv2.createTrackbar("U-H", "Trackbar", 179 , 179, nothing)
 cv2.createTrackbar("U-S", "Trackbar", 255 , 255, nothing)
 cv2.createTrackbar("U-V", "Trackbar", 255 , 255, nothing)
+cv2.createTrackbar("TH", "Trackbar", 0 , 179, nothing)
+
 
 
 def describe(image,numPoints,radius, eps=1e-7):
