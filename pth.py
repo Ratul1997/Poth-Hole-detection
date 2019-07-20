@@ -24,7 +24,7 @@ cv2.createTrackbar("TH", "Trackbar", 0 , 255, nothing)
 def cropImage(frame):
     height, width, _ = frame.shape
     points = np.array([
-        [(0, height), (127, 220), (265, 220),(width, 400),(width,height) ]])
+        [(0, height), (127, 260), (290, 260),(width, 450),(width,height) ]])
 
     mask = np.zeros((height, width), np.uint8)
     cv2.polylines(mask, np.int32([points]), True, 255, 2)
@@ -81,7 +81,7 @@ def cnvrtHSV(frame):
 
 def histrigramEqu(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    print(np.array(img))
+    # print(np.array(img))
     equ = cv2.equalizeHist(img)
     # res = np.hstack((img,equ))
 
@@ -105,11 +105,28 @@ def histrigramEqu(img):
 
     cv2.imshow("th3", res2)
 
+    return res2
+
+def contrs(img):
+    mask = np.zeros(img.shape, np.uint8)
+    contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        print(cv2.contourArea(cnt))
+        if 200 < cv2.contourArea(cnt) < 180380:
+            print("sss " + str(cv2.contourArea(cnt)))
+            cv2.drawContours(img, [cnt], 0, (0, 255, 0), thickness=cv2.FILLED)
+            cv2.drawContours(mask, [cnt], 0, 255, -1)
+
+
+
+    cv2.imshow("th4", mask)
+    return mask
 
 while True:
-    frame = cv2.imread("158.jpg")
-
+    frame = cv2.imread("27.jpg")
+    cpy_frame = frame
     frame = cv2.resize(frame,(512,512))
+    cpy_frame = frame
     cv2.imshow("frame",frame)
     frame = cropImage(frame)
 
@@ -118,8 +135,12 @@ while True:
 
     cv2.imshow("frame2",frame)
 
-    histrigramEqu(frame)
+    frame = histrigramEqu(frame)
+    mask = contrs(frame)
 
+    red = cv2.bitwise_and(cpy_frame, cpy_frame, mask=mask)
+
+    cv2.imshow("rrr",red)
     k = cv2.waitKey(0)
     if k % 256 == 27:
         print("Escape hit, closing...")

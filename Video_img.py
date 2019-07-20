@@ -80,7 +80,7 @@ def cnvrtHSV(frame):
 
 def histrigramEqu(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    print(np.array(img))
+    # print(np.array(img))
     equ = cv2.equalizeHist(img)
     # res = np.hstack((img,equ))
 
@@ -104,6 +104,22 @@ def histrigramEqu(img):
 
     cv2.imshow("th3", res2)
 
+    return res2
+
+def contrs(img):
+    mask = np.zeros(img.shape, np.uint8)
+    contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        print(cv2.contourArea(cnt))
+        if 200 < cv2.contourArea(cnt) < 170500:
+            print("sss " + str(cv2.contourArea(cnt)))
+            cv2.drawContours(img, [cnt], 0, (0, 255, 0), 2)
+            cv2.drawContours(mask, [cnt], 0, 255, -1)
+
+    cv2.imshow("th4", mask)
+    cv2.bitwise_not(img, img, mask)
+    cv2.imshow('IMG', img)
+    return img
 
 cap = cv2.VideoCapture('video/1.mp4')
 
@@ -121,7 +137,8 @@ while (cap.isOpened()):
 
         cv2.imshow('Frame', frame)
 
-        histrigramEqu(frame)
+        frame = histrigramEqu(frame)
+        frame = contrs(frame)
 
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
