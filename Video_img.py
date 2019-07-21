@@ -23,7 +23,7 @@ cv2.createTrackbar("TH", "Trackbar", 0 , 255, nothing)
 def cropImage(frame):
     height, width, _ = frame.shape
     points = np.array([
-        [(30, height), (132, 260), (290, 260),(width, 450),(width,height) ]])
+        [(30, height), (132, 265), (280, 265),(width, 450),(width,height) ]])
 
     mask = np.zeros((height, width), np.uint8)
     cv2.polylines(mask, np.int32([points]), True, 255, 2)
@@ -52,6 +52,8 @@ def cnvrtHSV(frame):
 def histrigramEqu(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     equ = cv2.equalizeHist(img)
+
+
     blur = cv2.GaussianBlur(equ, (5, 5), 0)
 
     cv2.imshow("ss", equ)
@@ -74,16 +76,39 @@ def histrigramEqu(img):
 
     return res2
 
+
+def floodFill(im_th):
+    im_floodfill = im_th.copy()
+
+    h, w = im_th.shape[:2]
+    mask = np.zeros((h + 2, w + 2), np.uint8)
+
+    cv2.floodFill(im_floodfill, mask, (0, 0), 0)
+    # cv2.floodFill(im_floodfill, mask, (511, 470), 0)
+
+    # Invert floodfilled image
+    im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+
+    # Combine the two images to get the foreground.
+    im_out = im_th | im_floodfill_inv
+
+    # Display images.
+    cv2.imshow("Thresholded Image", im_th)
+    cv2.imshow("Floodfilled Image", im_floodfill)
+    return im_floodfill
+
+
 def contrs(img,frame):
     mask = np.zeros(img.shape, np.uint8)
     contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         # print(cv2.contourArea(cnt))
-        if 420 < cv2.contourArea(cnt) < 120380:
+        if 500 < cv2.contourArea(cnt) < 3800:
             print("sss " + str(cv2.contourArea(cnt)))
             # cv2.drawContours(frame, [cnt], 0, (0, 255, 0), thickness=cv2.FILLED)
             x, y, w, h = cv2.boundingRect(cnt)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # cv2.imwrite("output/"+str(cv2.contourArea(cnt))+".jpg",frame)
 
 
     cv2.imshow("th4", frame)
@@ -109,6 +134,8 @@ while (cap.isOpened()):
         cv2.imshow('Frame', frame)
 
         frame = histrigramEqu(frame)
+
+        frame = floodFill(frame)
         frame = contrs(frame,cpy)
 
         if cv2.waitKey(25) & 0xFF == ord('q'):

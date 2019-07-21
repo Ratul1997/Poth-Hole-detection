@@ -42,11 +42,15 @@ def cnvrtHSV(frame):
     u_s = cv2.getTrackbarPos("U-S", "Trackbar")
     u_v = cv2.getTrackbarPos("U-V", "Trackbar")
 
+    blur = cv2.GaussianBlur(hsv_frame, (5, 5), 0)
+
+    edges = cv2.Canny(blur, 100, 200)
+
     low_red = np.array([0, 0, 0])
     high_red = np.array([179, 43, 255])
     red_mask = cv2.inRange(hsv_frame, low_red, high_red)
     red = cv2.bitwise_and(frame, frame, mask=red_mask)
-    cv2.imshow("ss",red)
+
     return red
 
 
@@ -58,25 +62,46 @@ def histrigramEqu(img):
 
     blur = cv2.GaussianBlur(equ, (5, 5), 0)
 
+    # edges = cv2.Canny(blur, 100, 200)
+
     cv2.imshow("ss", equ)
-    cv2.imshow("bl", blur)
+    # cv2.imshow("bl", edges)
 
     TH = cv2.getTrackbarPos("TH", "Trackbar")
 
     _, res2 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV)
 
-    cv2.imshow("th", res2)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     erosion = cv2.erode(res2, kernel, iterations=2)
 
     res2 = cv2.dilate(erosion, kernel, iterations=4)
 
-    cv2.imshow("th2", res2)
     res2 = cv2.morphologyEx(res2, cv2.MORPH_OPEN, kernel)
 
     cv2.imshow("th3", res2)
 
     return res2
+
+
+def floodFill(im_th):
+    im_floodfill = im_th.copy()
+
+    h, w = im_th.shape[:2]
+    mask = np.zeros((h + 2, w + 2), np.uint8)
+
+    print(im_th[511][450])
+    cv2.floodFill(im_floodfill, mask, (0, 0), 0);
+    cv2.floodFill(im_floodfill, mask, (511, 511), 0);
+    # Invert floodfilled image
+    im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+
+    # Combine the two images to get the foreground.
+    im_out = im_th | im_floodfill_inv
+
+    # Display images.
+    cv2.imshow("Thresholded Image", im_th)
+    cv2.imshow("Floodfilled Image", im_floodfill)
+    return im_floodfill
 
 def contrs(img,frame):
     mask = np.zeros(img.shape, np.uint8)
@@ -92,8 +117,16 @@ def contrs(img,frame):
     cv2.imshow("th4", frame)
     return mask
 
+def Cany(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    canny = cv2.Canny(blur, 100, 150)
+    # cv2.imshow("ca",canny)
+    floodFill(canny)
+
+
 while True:
-    frame = cv2.imread("158.jpg")
+    frame = cv2.imread("output/516.jpg")
     cpy_frame = frame
     frame = cv2.resize(frame,(512,512))
     cpy_frame = frame
@@ -102,15 +135,11 @@ while True:
 
     frame = cnvrtHSV(frame)
 
-
-    cv2.imshow("frame2",frame)
-
+    # cv2.imshow("frame2",frame)
     frame = histrigramEqu(frame)
+    frame = floodFill(frame)
     mask = contrs(frame,cpy_frame)
 
-    red = cv2.bitwise_and(cpy_frame, cpy_frame, mask=mask)
-
-    cv2.imshow("rrr",red)
     k = cv2.waitKey(0)
     if k % 256 == 27:
         print("Escape hit, closing...")
