@@ -23,7 +23,7 @@ cv2.createTrackbar("TH", "Trackbar", 0 , 255, nothing)
 def cropImage(frame):
     height, width, _ = frame.shape
     points = np.array([
-        [(0, height), (127, 220), (263, 220),(width, 400),(width,height) ]])
+        [(0, height), (135, 260), (290, 260), (width, 450), (width, height)]])
 
     mask = np.zeros((height, width), np.uint8)
     cv2.polylines(mask, np.int32([points]), True, 255, 2)
@@ -91,7 +91,7 @@ def histrigramEqu(img):
 
     TH = cv2.getTrackbarPos("TH", "Trackbar")
 
-    _, res2 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV)
+    _, res2 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY)
 
     cv2.imshow("th", res2)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
@@ -106,19 +106,20 @@ def histrigramEqu(img):
 
     return res2
 
-def contrs(img):
+
+def contrs(img,cpy):
     mask = np.zeros(img.shape, np.uint8)
     contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         print(cv2.contourArea(cnt))
-        if 200 < cv2.contourArea(cnt) < 170500:
+        if 200 < cv2.contourArea(cnt) < 110500:
             print("sss " + str(cv2.contourArea(cnt)))
-            cv2.drawContours(img, [cnt], 0, (0, 255, 0), 2)
+            cv2.drawContours(cpy, [cnt], 0, (0, 255, 0), 2)
             cv2.drawContours(mask, [cnt], 0, 255, -1)
 
     cv2.imshow("th4", mask)
     cv2.bitwise_not(img, img, mask)
-    cv2.imshow('IMG', img)
+    cv2.imshow('IMG', cpy)
     return img
 
 cap = cv2.VideoCapture('video/1.mp4')
@@ -130,6 +131,9 @@ while (cap.isOpened()):
     ret, frame = cap.read()
     if ret == True:
         frame = cv2.resize(frame,(512,512))
+
+        cpy = frame
+
         cv2.imshow("frames",frame)
         frame = cropImage(frame)
 
@@ -138,7 +142,7 @@ while (cap.isOpened()):
         cv2.imshow('Frame', frame)
 
         frame = histrigramEqu(frame)
-        frame = contrs(frame)
+        frame = contrs(frame,cpy)
 
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break

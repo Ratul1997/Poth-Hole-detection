@@ -123,7 +123,7 @@ def contrs(img):
     return mask
 
 while True:
-    frame = cv2.imread("27.jpg")
+    frame = cv2.imread("158.jpg")
     cpy_frame = frame
     frame = cv2.resize(frame,(512,512))
     cpy_frame = frame
