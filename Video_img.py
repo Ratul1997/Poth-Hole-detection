@@ -4,6 +4,10 @@ import cv2
 import time
 import os
 import pickle
+import sys
+from playsound import playsound
+from pydub import AudioSegment
+from pydub.playback import play
 
 def nothing(x):
 	pass
@@ -108,7 +112,11 @@ def contrs(img,frame):
             # cv2.drawContours(frame, [cnt], 0, (0, 255, 0), thickness=cv2.FILLED)
             x, y, w, h = cv2.boundingRect(cnt)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # playsound('Sund/1.mp3')
+            # song = AudioSegment.from_mp3('Sund/1.mp3')
+            # play(song)
             # cv2.imwrite("output/"+str(cv2.contourArea(cnt))+".jpg",frame)
+
 
 
     cv2.imshow("th4", frame)
