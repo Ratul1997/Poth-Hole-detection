@@ -56,7 +56,7 @@ def histrigramEqu(img):
 
 	TH = cv2.getTrackbarPos("TH","Trackbar")
 
-	_, res2 = cv2.threshold(blur, TH, 255, cv2.THRESH_BINARY_INV)
+	_, res2 = cv2.threshold(blur, 225, 255, cv2.THRESH_BINARY)
 
 
 	cv2.imshow("th",res2)
@@ -135,7 +135,7 @@ def cropImage(frame):
 if __name__ == '__main__':
 
 	while True:
-		frame = cv2.imread('158.jpg')
+		frame = cv2.imread('1.jpeg')
 
 		frame = cv2.resize(frame, (512, 512))
 
@@ -149,8 +149,8 @@ if __name__ == '__main__':
 		u_s = cv2.getTrackbarPos("U-S", "Trackbar")
 		u_v = cv2.getTrackbarPos("U-V", "Trackbar")
 
-		low_red = np.array([0, 0, 0])
-		high_red = np.array([179, 43, 255])
+		low_red = np.array([l_h, l_s, l_v])
+		high_red = np.array([u_h, u_s, u_v])
 		red_mask = cv2.inRange(hsv_frame, low_red, high_red)
 		red = cv2.bitwise_and(frame, frame, mask=red_mask)
 

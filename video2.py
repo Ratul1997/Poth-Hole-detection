@@ -5,9 +5,10 @@ import time
 import os
 import pickle
 import sys
-from playsound import playsound
-from pydub import AudioSegment
-from pydub.playback import play
+import glob
+# from playsound import playsound
+# from pydub import AudioSegment
+# from pydub.playback import play
 
 def nothing(x):
 	pass
@@ -23,11 +24,55 @@ cv2.createTrackbar("U-S", "Trackbar", 255 , 255, nothing)
 cv2.createTrackbar("U-V", "Trackbar", 255 , 255, nothing)
 cv2.createTrackbar("TH", "Trackbar", 0 , 255, nothing)
 
+def undistort_img():
+    # Prepare object points 0,0,0 ... 8,5,0
+    obj_pts = np.zeros((6 * 9, 3), np.float32)
+    obj_pts[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
+
+    # Stores all object points & img points from all images
+    objpoints = []
+    imgpoints = []
+
+    # Get directory for all calibration images
+    images = glob.glob('camera_cal/*.jpg')
+
+    for indx, fname in enumerate(images):
+        img = cv2.imread(fname)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        ret, corners = cv2.findChessboardCorners(gray, (9, 6), None)
+
+        if ret == True:
+            objpoints.append(obj_pts)
+            imgpoints.append(corners)
+    # Test undistortion on img
+    img_size = (img.shape[1], img.shape[0])
+
+    # Calibrate camera
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
+
+    dst = cv2.undistort(img, mtx, dist, None, mtx)
+    # Save camera calibration for later use
+    dist_pickle = {}
+    dist_pickle['mtx'] = mtx
+    dist_pickle['dist'] = dist
+    pickle.dump(dist_pickle, open('camera_cal/cal_pickle.p', 'wb'))
+
+
+def undistort(img, cal_dir='camera_cal/cal_pickle.p'):
+    # cv2.imwrite('camera_cal/test_cal.jpg', dst)
+    with open(cal_dir, mode='rb') as f:
+        file = pickle.load(f)
+    mtx = file['mtx']
+    dist = file['dist']
+    dst = cv2.undistort(img, mtx, dist, None, mtx)
+
+    return dst
 
 def cropImage(frame):
     height, width, _ = frame.shape
     points = np.array([
-        [(30, height), (132, 265), (280, 265),(width, 450),(width,height) ]])
+        [(25, height), (145, 300), (270, 300),(width-30,height) ]])
 
     mask = np.zeros((height, width), np.uint8)
     cv2.polylines(mask, np.int32([points]), True, 255, 2)
@@ -45,8 +90,8 @@ def cnvrtHSV(frame):
     u_s = cv2.getTrackbarPos("U-S", "Trackbar")
     u_v = cv2.getTrackbarPos("U-V", "Trackbar")
 
-    low_red = np.array([0, 0, 0])
-    high_red = np.array([179, 43, 255])
+    low_red = np.array([l_h, l_s, l_v])
+    high_red = np.array([u_h, u_s, u_v])
     red_mask = cv2.inRange(hsv_frame, low_red, high_red)
     red = cv2.bitwise_and(frame, frame, mask=red_mask)
     cv2.imshow("ss",red)
@@ -119,14 +164,15 @@ def contrs(img,frame):
 
 
 
-    return frame
+    cv2.imshow("th4", frame)
+    return mask
 
-cap = cv2.VideoCapture('video/1.mp4')
-writer = None
+cap = cv2.VideoCapture('video/20190616_road2.mp4')
 
 if (cap.isOpened() == False):
     print("Error opening video stream or file")
 
+countt = 0
 while (cap.isOpened()):
     ret, frame = cap.read()
     if ret == True:
@@ -135,6 +181,8 @@ while (cap.isOpened()):
         cpy = frame
 
         cv2.imshow("frames",frame)
+        countt += 1
+        cv2.imwrite("output/videos"+str(countt)+".jpg",frame)
         frame = cropImage(frame)
 
         frame = cnvrtHSV(frame)
@@ -145,30 +193,12 @@ while (cap.isOpened()):
 
         frame = floodFill(frame)
         frame = contrs(frame,cpy)
-        cv2.imshow("th4", frame)
-    
-        if writer is None and "video/v.mkv" is not None:
-            fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-            writer = cv2.VideoWriter("video/v.mkv", fourcc, 24,
-                (frame.shape[1], frame.shape[0]), True)
-
-        # if the writer is not None, write the frame with recognized
-        # faces t odisk
-        if writer is not None:
-            writer.write(frame)
-
 
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
 
     else:
         break
-
-
-
-# check to see if the video writer point needs to be released
-if writer is not None:
-    writer.release()        
 
 cap.release()
 cv2.destroyAllWindows()

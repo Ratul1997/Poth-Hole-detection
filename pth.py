@@ -46,11 +46,11 @@ def cnvrtHSV(frame):
 
     edges = cv2.Canny(blur, 100, 200)
 
-    low_red = np.array([0, 0, 0])
-    high_red = np.array([179, 43, 255])
+    low_red = np.array([l_h, l_s, l_v])
+    high_red = np.array([u_h, u_s, u_v])
     red_mask = cv2.inRange(hsv_frame, low_red, high_red)
     red = cv2.bitwise_and(frame, frame, mask=red_mask)
-
+    cv2.imshow("Res",red)
     return red
 
 
@@ -126,7 +126,7 @@ def Cany(img):
 
 
 while True:
-    frame = cv2.imread("output/516.jpg")
+    frame = cv2.imread("output/videos377.jpg")
     cpy_frame = frame
     frame = cv2.resize(frame,(512,512))
     cpy_frame = frame
@@ -137,6 +137,7 @@ while True:
 
     # cv2.imshow("frame2",frame)
     frame = histrigramEqu(frame)
+    cv2.imshow("ssas",frame)
     frame = floodFill(frame)
     mask = contrs(frame,cpy_frame)
 
